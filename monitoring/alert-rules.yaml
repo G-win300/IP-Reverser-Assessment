@@ -1,0 +1,42 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ip-reverser-alerts
+  namespace: monitoring
+  labels:
+    app: ip-reverser
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: ip-reverser.rules
+    rules:
+    - alert: IPReverserServiceDown
+      expr: probe_success{job="blackbox", instance="http://ip-reverser.ip-reverser.svc.cluster.local/health"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        service: ip-reverser
+      annotations:
+        summary: "IP Reverser service is down"
+        description: "The IP Reverser service has been down for more than 1 minute"
+        
+    - alert: IPReverserHighErrorRate
+      expr: rate(http_requests_total{job="ip-reverser", code=~"5.."}[5m]) > 0.1
+      for: 5m
+      labels:
+        severity: warning
+        service: ip-reverser
+      annotations:
+        summary: "High error rate detected"
+        description: "IP Reverser service error rate is {{ $value }} errors per second"
+        
+    - alert: IPReverserHighLatency
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="ip-reverser"}[5m])) > 1
+      for: 5m
+      labels:
+        severity: warning
+        service: ip-reverser
+      annotations:
+        summary: "High latency detected"
+        description: "95th percentile latency is {{ $value }}s"

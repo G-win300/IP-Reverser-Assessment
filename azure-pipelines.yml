@@ -1,0 +1,109 @@
+trigger:
+  branches:
+    include:
+    - main
+    - develop
+
+variables:
+  dockerRegistryServiceConnection: 'acr-service-connection'
+  imageRepository: 'ip-reverser-app'
+  containerRegistry: 'acrassessment2024.azurecr.io'
+  dockerfilePath: 'Dockerfile'
+  tag: '$(Build.BuildId)'
+
+stages:
+- stage: Build
+  displayName: Build and Test
+  jobs:
+  - job: Build
+    displayName: Build and Test Application
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Install Node.js'
+
+    - script: |
+        npm ci
+        npm run lint
+        npm run test
+      displayName: 'Install dependencies, lint, and test'
+      
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'test-results.xml'
+        failTaskOnFailedTests: true
+      displayName: 'Publish test results'
+      condition: always()
+
+- stage: ContainerBuild
+  displayName: Build and Push Container
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - job: ContainerBuild
+    displayName: Build and Push Docker Image
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    steps:
+    - task: Docker@2
+      displayName: 'Build Docker image'
+      inputs:
+        containerRegistry: '$(dockerRegistryServiceConnection)'
+        repository: '$(imageRepository)'
+        command: 'build'
+        Dockerfile: '$(dockerfilePath)'
+        tags: |
+          $(tag)
+          latest
+
+    - task: Docker@2
+      displayName: 'Push Docker image'
+      inputs:
+        containerRegistry: '$(dockerRegistryServiceConnection)'
+        repository: '$(imageRepository)'
+        command: 'push'
+        tags: |
+          $(tag)
+          latest
+
+    - script: |
+        echo "Image: $(containerRegistry)/$(imageRepository):$(tag)" > image-details.txt
+      displayName: 'Generate image details'
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: 'image-details.txt'
+        artifact: 'image-details'
+      displayName: 'Publish image details'
+
+- stage: UpdateManifests
+  displayName: Update Kubernetes Manifests
+  dependsOn: ContainerBuild
+  condition: succeeded()
+  jobs:
+  - job: UpdateManifests
+    displayName: Update Git Repository with New Image
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    steps:
+    - checkout: self
+      persistCredentials: true
+      
+    - script: |
+        # Update Helm values file with new image tag
+        sed -i "s/tag: .*/tag: \"$(tag)\"/g" helm/ip-reverser/values.yaml
+        
+        # Commit and push changes
+        git config --global user.email "azure-pipelines@dev.azure.com"
+        git config --global user.name "Azure Pipelines"
+        git add helm/ip-reverser/values.yaml
+        git commit -m "Update image tag to $(tag) [skip ci]"
+        git push origin HEAD:main
+      displayName: 'Update Helm values and commit'
