@@ -115,5 +115,5 @@ stages:
         git config --global user.name "Azure Pipelines"
         git add helm/ip-reverser/values.yaml
         git commit -m "Update image tag to $(tag) [skip ci]"
-        git push origin HEAD:main
+        git push origin HEAD:master
       displayName: 'Update Helm values and commit'
