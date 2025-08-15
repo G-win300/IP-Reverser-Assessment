@@ -27,18 +27,28 @@ stages:
       displayName: 'Install Node.js'
 
     - script: |
-        npm ci
+        npm install
         npm run lint
-        npm run test
+        npm run test -- --ci --coverage --watchAll=false --reporters=default --reporters=jest-junit
       displayName: 'Install dependencies, lint, and test'
+      env:
+        JEST_JUNIT_OUTPUT_DIR: $(Agent.TempDirectory)
+        JEST_JUNIT_OUTPUT_NAME: test-results.xml
       
     - task: PublishTestResults@2
       inputs:
         testResultsFormat: 'JUnit'
-        testResultsFiles: 'test-results.xml'
+        testResultsFiles: '$(Agent.TempDirectory)/test-results.xml'
         failTaskOnFailedTests: true
       displayName: 'Publish test results'
       condition: always()
+
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml'
+      displayName: 'Publish code coverage'
+      condition: succeededOrFailed()
 
 - stage: ContainerBuild
   displayName: Build and Push Container
