@@ -17,14 +17,14 @@ ingress:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
   hosts:
-    - host: ip-reverser.yourdomain.com
+    - host: ip-reverser.gwintech.space
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: ip-reverser-tls
       hosts:
-        - ip-reverser.yourdomain.com
+        - ip-reverser.gwintech.space
 
 resources:
   limits:
@@ -36,7 +36,7 @@ resources:
 
 autoscaling:
   enabled: true
-  minReplicas: 3
+  minReplicas: 4
   maxReplicas: 10
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80

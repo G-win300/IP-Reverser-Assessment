@@ -8,8 +8,8 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://dev.azure.com/yourorg/yourproject/_git/ip-reverser
-    targetRevision: main
+    repoURL: https://github.com/G-win300/IP-Reverser-Assessment
+    targetRevision: master
     path: helm/ip-reverser
     helm:
       valueFiles:

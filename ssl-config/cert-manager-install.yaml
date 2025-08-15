@@ -1,0 +1,38 @@
+# Cert-manager installation with CRDs
+# This file installs cert-manager v1.13.x with all necessary components
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+---
+# Install cert-manager CRDs
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cert-manager-install-script
+  namespace: cert-manager
+data:
+  install.sh: |
+    #!/bin/bash
+    
+    echo "Installing cert-manager..."
+    
+    # Add the Jetstack Helm repository
+    helm repo add jetstack https://charts.jetstack.io
+    helm repo update
+    
+    # Install cert-manager with CRDs
+    helm install cert-manager jetstack/cert-manager \
+      --namespace cert-manager \
+      --create-namespace \
+      --version v1.13.3 \
+      --set installCRDs=true \
+      --set prometheus.enabled=true \
+      --set webhook.timeoutSeconds=4
+    
+    echo "Waiting for cert-manager to be ready..."
+    kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
+    kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-cainjector -n cert-manager
+    kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-webhook -n cert-manager
+    
+    echo "Cert-manager installation completed successfully!"

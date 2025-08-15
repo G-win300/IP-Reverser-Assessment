@@ -1,6 +1,6 @@
 # IP Reverser Application
 
-A Node.js web application that extracts client IP addresses from HTTP requests, reverses them (e.g., 1.2.3.4 → 4.3.2.1), and stores them in a PostgreSQL database. This project demonstrates a complete DevOps pipeline using Azure Kubernetes Service (AKS), Azure Pipelines, ArgoCD, and comprehensive monitoring.
+A Node.js web application that extracts client IP addresses from HTTP requests, reverses them (e.g., 1.2.3.4 → 4.3.2.1), and stores them in a PostgreSQL database. This project demonstrates a complete DevOps pipeline using Azure Kubernetes Service (AKS), Azure Pipelines, ArgoCD, SSL/TLS with Let's Encrypt, and comprehensive monitoring.
 
 ## Quick Start
 
@@ -55,7 +55,12 @@ A Node.js web application that extracts client IP addresses from HTTP requests, 
    ./scripts/setup-infrastructure.sh
    ```
 
-2. **Set up monitoring:**
+2. **Set up SSL/TLS (NGINX Ingress + cert-manager):**
+   ```bash
+   ./scripts/setup-ssl.sh
+   ```
+
+3. **Set up monitoring:**
    ```bash
    ./scripts/setup-monitoring.sh
    ```
@@ -84,9 +89,39 @@ A Node.js web application that extracts client IP addresses from HTTP requests, 
 - **Database**: PostgreSQL
 - **Container Registry**: Azure Container Registry
 - **Orchestration**: Azure Kubernetes Service (AKS)
+- **SSL/TLS**: NGINX Ingress Controller + cert-manager with Let's Encrypt
 - **CI/CD**: Azure Pipelines
 - **GitOps**: ArgoCD
 - **Monitoring**: kube-prometheus-stack + Blackbox Exporter
+
+## SSL/TLS Configuration
+
+The application is secured with SSL/TLS certificates from Let's Encrypt:
+
+- **Domain**: https://ip-reverser.gwintech.space
+- **Certificate Management**: Automatic via cert-manager
+- **Ingress Controller**: NGINX Ingress
+
+### SSL Setup Commands
+
+```bash
+# Install SSL components
+./scripts/setup-ssl.sh
+
+# Check certificate status
+kubectl get certificate -n ip-reverser
+kubectl describe certificate ip-reverser-tls -n ip-reverser
+
+# Test SSL endpoint
+curl -I https://ip-reverser.gwintech.space
+```
+
+### SSL Configuration Files
+
+- `ssl-config/cert-manager-install.yaml` - cert-manager installation
+- `ssl-config/cluster-issuer.yaml` - Let's Encrypt ClusterIssuers
+- `ssl-config/nginx-ingress-install.yaml` - NGINX Ingress Controller
+- `helm/ip-reverser/templates/ingress.yaml` - Ingress resource template
 
 ## Monitoring
 
@@ -107,6 +142,7 @@ Access monitoring dashboards:
 │   └── ip-reverser/          # Helm chart
 ├── argocd/
 │   └── application.yaml      # ArgoCD configuration
+├── ssl-config/               # SSL/TLS configurations
 ├── monitoring/               # Monitoring configurations
 ├── scripts/                  # Deployment scripts
 ├── tests/                    # Test files

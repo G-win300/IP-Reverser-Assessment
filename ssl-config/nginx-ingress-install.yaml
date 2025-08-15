@@ -1,0 +1,46 @@
+# NGINX Ingress Controller installation script
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-ingress-install-script
+  namespace: ingress-nginx
+data:
+  install.sh: |
+    #!/bin/bash
+    
+    echo "Installing NGINX Ingress Controller..."
+    
+    # Add the NGINX Ingress Helm repository
+    helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+    helm repo update
+    
+    # Install NGINX Ingress Controller
+    helm install ingress-nginx ingress-nginx/ingress-nginx \
+      --namespace ingress-nginx \
+      --create-namespace \
+      --set controller.replicaCount=2 \
+      --set controller.nodeSelector."kubernetes\.io/os"=linux \
+      --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux \
+      --set controller.admissionWebhooks.patch.nodeSelector."kubernetes\.io/os"=linux \
+      --set controller.service.type=LoadBalancer \
+      --set controller.metrics.enabled=true \
+      --set controller.metrics.serviceMonitor.enabled=true \
+      --set controller.metrics.serviceMonitor.additionalLabels.release=kube-prometheus \
+      --wait \
+      --timeout=300s
+    
+    echo "Waiting for NGINX Ingress Controller to be ready..."
+    kubectl wait --namespace ingress-nginx \
+      --for=condition=ready pod \
+      --selector=app.kubernetes.io/component=controller \
+      --timeout=300s
+    
+    echo "Getting LoadBalancer IP..."
+    kubectl get svc -n ingress-nginx ingress-nginx-controller
+    
+    echo "NGINX Ingress Controller installation completed successfully!"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-nginx
