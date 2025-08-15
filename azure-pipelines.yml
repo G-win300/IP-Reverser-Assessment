@@ -1,13 +1,13 @@
 trigger:
   branches:
     include:
-    - main
+    - master
     - develop
 
 variables:
   dockerRegistryServiceConnection: 'acr-service-connection'
   imageRepository: 'ip-reverser-app'
-  containerRegistry: 'acrassessment2024.azurecr.io'
+  containerRegistry: 'acripreverser.azurecr.io'
   dockerfilePath: 'Dockerfile'
   tag: '$(Build.BuildId)'
 
