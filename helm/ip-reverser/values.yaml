@@ -3,7 +3,7 @@ replicaCount: 3
 image:
   repository: acripreverser.azurecr.io/ip-reverser-app
   pullPolicy: Always
-  tag: "latest"
+  tag: "10"
 
 service:
   type: LoadBalancer
