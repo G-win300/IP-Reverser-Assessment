@@ -30,7 +30,7 @@ spec:
     # The ACME server URL for staging
     server: https://acme-staging-v02.api.letsencrypt.org/directory
     # Email address used for ACME registration
-    email: admin@gwintech.space  # Replace with your actual email
+    email: geffizy@gmail.com  
     # Name of a secret used to store the ACME account private key
     privateKeySecretRef:
       name: letsencrypt-staging-private-key

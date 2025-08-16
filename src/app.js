@@ -2,6 +2,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const winston = require('winston');
+const path = require('path');
 require('dotenv').config();
 
 const dbService = require('./services/database');
@@ -24,9 +25,19 @@ const logger = winston.createLogger({
 });
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"]
+    }
+  }
+}));
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'views')));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -43,8 +54,13 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Main endpoint
-app.get('/', async (req, res) => {
+// Serve the main HTML page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'index.html'));
+});
+
+// API endpoint for IP processing
+app.get('/api/ip', async (req, res) => {
   try {
     // Extract client IP
     const clientIP = ipService.extractClientIP(req);
@@ -57,10 +73,10 @@ app.get('/', async (req, res) => {
     // Store in database
     const record = await dbService.storeReversedIP(clientIP, reversedIP);
     
-    // Return response
+    // Return response for API
     res.json({
-      originalIP: clientIP,
-      reversedIP: reversedIP,
+      originalIp: clientIP,
+      reversedIp: reversedIP,
       timestamp: record.created_at,
       message: `Your IP ${clientIP} reversed is ${reversedIP}`
     });

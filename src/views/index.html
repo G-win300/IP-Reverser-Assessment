@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Reverser - Public IP Detector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            margin: 20px;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: #4a5568;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .ip-display {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ip-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            animation: loading 2s ease-in-out infinite;
+        }
+
+        @keyframes loading {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: -100%; }
+        }
+
+        .ip-label {
+            color: #4a5568;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ip-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+        }
+
+        .ip-original {
+            color: #718096;
+            font-size: 1rem;
+            font-family: 'Courier New', monospace;
+            background: #edf2f7;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 1rem;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+
+        .info-section {
+            margin-top: 2rem;
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 1.5rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-section h3 {
+            color: #4a5568;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .info-section p {
+            color: #718096;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #48bb78;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 2rem;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .ip-value {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 IP Reverser</h1>
+            <p>Discover your public IP address in reverse format</p>
+        </div>
+
+        <div class="ip-display">
+            <div class="ip-label">
+                <span class="status-indicator"></span>
+                Your Reversed Public IP Address
+            </div>
+            <div class="ip-value" id="reversedIp">
+                Loading...
+            </div>
+            <div class="ip-original">
+                Original: <span id="originalIp">...</span>
+            </div>
+        </div>
+
+        <button class="refresh-btn" onclick="refreshIP()">
+            🔄 Refresh IP Address
+        </button>
+
+        <div class="info-section">
+            <h3>ℹ️ How it works</h3>
+            <p>
+                This application detects your public IP address and displays it in reverse format. 
+                For example, if your IP is <code>192.168.1.100</code>, it will be displayed as 
+                <code>100.1.168.192</code>. The reversed IP is stored in our database for analysis.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>🚀 Powered by Node.js, PostgreSQL & Kubernetes</p>
+        </div>
+    </div>
+
+    <script>
+        async function fetchIPData() {
+            try {
+                const response = await fetch('/api/ip');
+                const data = await response.json();
+                
+                document.getElementById('reversedIp').textContent = data.reversedIp;
+                document.getElementById('originalIp').textContent = data.originalIp;
+                
+                // Add animation effect
+                document.getElementById('reversedIp').style.animation = 'none';
+                setTimeout(() => {
+                    document.getElementById('reversedIp').style.animation = 'loading 2s ease-in-out infinite';
+                }, 100);
+                
+            } catch (error) {
+                console.error('Error fetching IP data:', error);
+                document.getElementById('reversedIp').textContent = 'Error loading IP';
+                document.getElementById('originalIp').textContent = 'Please try again';
+            }
+        }
+
+        function refreshIP() {
+            document.getElementById('reversedIp').textContent = 'Loading...';
+            document.getElementById('originalIp').textContent = '...';
+            fetchIPData();
+        }
+
+        // Load IP data when page loads
+        document.addEventListener('DOMContentLoaded', fetchIPData);
+
+        // Auto-refresh every 30 seconds
+        setInterval(fetchIPData, 30000);
+    </script>
+</body>
+</html>
