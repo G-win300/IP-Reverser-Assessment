@@ -3,7 +3,7 @@ replicaCount: 3
 image:
   repository: acripreverser.azurecr.io/ip-reverser-app
   pullPolicy: Always
-  tag: "12"
+  tag: "13"
 
 service:
   type: ClusterIP
